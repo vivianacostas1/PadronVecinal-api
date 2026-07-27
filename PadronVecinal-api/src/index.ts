@@ -28,7 +28,7 @@ const PORT: number = parseInt(process.env.PORT || "3000", 10);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://padron-vecinal-front.vercel.app', // <--- Tu URL de Vercel añadida
+  'https://padron-vecinal-front-gnt3syw0j-taskweb.vercel.app', // <--- Tu URL de Vercel añadida
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
 
