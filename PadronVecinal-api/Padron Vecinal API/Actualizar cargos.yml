@@ -1,0 +1,21 @@
+info:
+  name: Actualizar cargos
+  type: http
+
+http:
+  method: PUT
+  url: http://localhost:3001/api/cargos/1
+  body:
+    type: json
+    data: |-
+      {
+        "nombre": "Presidente de la Junta Vecinal",
+        "orden": 1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

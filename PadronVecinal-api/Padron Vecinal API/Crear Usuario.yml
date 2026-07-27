@@ -1,0 +1,24 @@
+info:
+  name: Crear Usuario
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3001/api/usuarios
+  body:
+    type: json
+    data: |-
+      {
+        "nombre": "Admin Test",
+        "email": "admin@example.com",
+        "password": "222222",
+        "rol": "administrador"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

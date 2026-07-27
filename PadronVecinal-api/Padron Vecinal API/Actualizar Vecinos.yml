@@ -1,0 +1,17 @@
+info:
+  name: Actualizar Vecinos
+  type: http
+
+http:
+  method: PUT
+  url: http://localhost:3001/api/vecinos/5
+  body:
+    type: json
+    data: '{"direccion": "Nueva Avenida #123"}'
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

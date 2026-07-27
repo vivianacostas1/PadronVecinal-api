@@ -1,0 +1,30 @@
+info:
+  name: Crear Vecino
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3001/api/vecinos
+  body:
+    type: json
+    data: |-
+      {
+        "usuarioId": 3,
+        "nombre": "Juan Carlos",
+        "primerApellido": "Pérez",
+        "segundoApellido": "Gómez",
+        "numeroCarnet": "5555555",
+        "direccion": "Av. Principal #123",
+        "manzano": "A-4",
+        "numeroFolio": "FOLIO-9876",
+        "tipoResidencia": "dueno"
+        
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

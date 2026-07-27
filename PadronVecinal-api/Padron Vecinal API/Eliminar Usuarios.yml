@@ -1,0 +1,17 @@
+info:
+  name: Eliminar Usuarios
+  type: http
+  seq: 1
+
+http:
+  method: DELETE
+  url: http://localhost:3001/api/usuarios/3
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbi50ZXN0QGV4YW1wbGUuY29tIiwicm9sIjoiYWRtaW5pc3RyYWRvciIsImlhdCI6MTc4NDgzMTk2MiwiZXhwIjoxNzg1NDM2NzYyfQ.UEfVERZ1sl5n5pH1xLyIgNRGX23zuuFfpO5h1z811iw
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

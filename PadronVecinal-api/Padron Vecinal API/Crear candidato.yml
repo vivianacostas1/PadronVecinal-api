@@ -1,0 +1,22 @@
+info:
+  name: Crear candidato
+  type: http
+
+http:
+  method: POST
+  url: http://localhost:3001/api/candidatos
+  body:
+    type: json
+    data: |-
+      {
+        "planchaId": 1,
+        "cargoId": 1,
+        "vecinoId": 12
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

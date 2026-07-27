@@ -1,0 +1,22 @@
+info:
+  name: Crear Cargo
+  type: http
+
+http:
+  method: POST
+  url: http://localhost:3001/api/cargos
+  body:
+    type: json
+    data: |-
+      {
+        "nombre": "VicePresidente",
+        "orden": 1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+​

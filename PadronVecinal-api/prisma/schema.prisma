@@ -1,0 +1,157 @@
+// =====================================================================
+// PADRONVECINAL - schema.prisma
+// Stack: Node.js + TypeScript + Express + Prisma + PostgreSQL
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// ENUMS
+// =====================================================================
+
+enum RolUsuario {
+  administrador
+  operador_consultas
+  vecino
+
+  @@map("rol_usuario")
+}
+
+enum TipoResidencia {
+  dueno
+  inquilino
+  anticresista
+
+  @@map("tipo_residencia")
+}
+
+// =====================================================================
+// MÓDULO 1: USUARIOS Y ROLES
+// =====================================================================
+
+model Usuario {
+  id                    Int                 @id @default(autoincrement())
+  nombre                String              @db.VarChar(100)
+  email                 String              @unique @db.VarChar(150)
+  passwordHash          String              @map("password_hash") @db.VarChar(255)
+  rol                   RolUsuario
+  activo                Boolean             @default(true)
+  creadoPorId           Int?                @map("creado_por")
+  creadoEn              DateTime            @default(now()) @map("creado_en")
+  actualizadoEn         DateTime            @updatedAt @map("actualizado_en")
+
+  // Auto-relación: qué admin creó a este usuario / qué usuarios creó este admin
+  creadoPor             Usuario?            @relation("UsuarioCreador", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  usuariosCreados       Usuario[]           @relation("UsuarioCreador")
+
+  vecinos               Vecino[]
+  planchaCandidatos     Plancha[]           @relation("PlanchaCreador")
+  resultadosRegistrados ResultadoVotacion[] @relation("ResultadoRegistrador")
+
+  @@index([rol])
+  @@index([creadoPorId])
+  @@index([email])
+  @@map("usuarios")
+}
+
+// =====================================================================
+// MÓDULO 2: EMPADRONAMIENTO DE VECINOS
+// =====================================================================
+
+model Vecino {
+  id              Int            @id @default(autoincrement())
+  usuarioId       Int            @map("usuario_id")
+  nombre          String         @db.VarChar(100)
+  primerApellido  String         @map("primer_apellido") @db.VarChar(100)
+  segundoApellido String?        @map("segundo_apellido") @db.VarChar(100)
+  numeroCarnet    String         @unique @map("numero_carnet") @db.VarChar(20)
+  direccion       String         @db.VarChar(255)
+  manzano         String         @db.VarChar(20)
+  numeroFolio     String         @map("numero_folio") @db.VarChar(30)
+  tipoResidencia  TipoResidencia @map("tipo_residencia")
+  creadoEn        DateTime       @default(now()) @map("creado_en")
+  actualizadoEn   DateTime       @updatedAt @map("actualizado_en")
+
+  usuario         Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  candidato      candidato[]
+
+  @@index([usuarioId])
+  @@index([manzano])
+  @@index([numeroFolio])
+  @@index([tipoResidencia])
+  @@index([primerApellido, segundoApellido, nombre])
+  @@map("vecinos")
+}
+
+// =====================================================================
+// MÓDULO 3: PLANCHAS DE VOTACIÓN
+// =====================================================================
+
+model Cargo {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @unique @db.VarChar(100)
+  orden    Int       @default(0) @db.SmallInt
+  creadoEn DateTime  @default(now()) @map("creado_en")
+
+  candidato candidato[]
+
+  @@map("cargos")
+}
+
+model Plancha {
+  id            Int      @id @default(autoincrement())
+  color         String   @db.VarChar(50)
+  nombreFrente  String   @map("nombre_frente") @db.VarChar(150)
+  creadoPorId   Int?     @map("creado_por")
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  creadoPor Usuario?            @relation("PlanchaCreador", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  candidato candidato[]
+  resultado ResultadoVotacion?
+
+  @@index([creadoPorId])
+  @@map("plancha")
+}
+model candidato {
+  id        Int      @id @default(autoincrement())
+  planchaId Int      @map("plancha_id")
+  cargoId   Int      @map("cargo_id")
+  vecinoId  Int      @map("vecino_id")
+  creadoEn  DateTime @default(now()) @map("creado_en")
+
+  plancha Plancha @relation(fields: [planchaId], references: [id], onDelete: Cascade)
+  cargo   Cargo   @relation(fields: [cargoId], references: [id], onDelete: Restrict)
+  vecino  Vecino  @relation(fields: [vecinoId], references: [id], onDelete: Restrict)
+
+  @@unique([planchaId, cargoId])
+  @@index([planchaId])
+  @@index([vecinoId])
+  @@index([cargoId])
+  @@map("candidato")
+}
+
+// =====================================================================
+// MÓDULO 4: RESULTADOS DE VOTACIÓN
+// =====================================================================
+
+model ResultadoVotacion {
+  id              Int      @id @default(autoincrement())
+  planchaId       Int      @unique @map("plancha_id")
+  cantidadVotos   Int      @default(0) @map("cantidad_votos")
+  registradoPorId Int      @map("registrado_por")
+  creadoEn        DateTime @default(now()) @map("creado_en")
+
+  plancha       Plancha @relation(fields: [planchaId], references: [id], onDelete: Cascade)
+  registradoPor Usuario @relation("ResultadoRegistrador", fields: [registradoPorId], references: [id], onDelete: Restrict)
+
+  @@index([registradoPorId])
+  @@map("resultados_votacion")
+}

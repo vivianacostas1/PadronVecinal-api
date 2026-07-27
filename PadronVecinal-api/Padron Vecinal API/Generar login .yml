@@ -1,0 +1,21 @@
+info:
+  name: "Generar login "
+  type: http
+
+http:
+  method: POST
+  url: http://localhost:3001/api/usuarios/login
+  body:
+    type: json
+    data: |-
+      {
+        "email": "admin.test@example.com",
+        "password": "222222"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
