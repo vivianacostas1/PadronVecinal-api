@@ -1,96 +1,121 @@
-import express, { Application, Request, Response } from 'express'; 
-import cors from 'cors'; 
-import dotenv from 'dotenv'; 
- 
-// Importar rutas 
-import healthRouter from './routes/health'; 
-import usuarioRouter from './routes/usuario.routes'; // (Asegúrate de que el nombre del archivo coincida)
+import express, { Application, Request, Response } from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+// Cargar variables de entorno
+dotenv.config();
+
+// Importar rutas
+import healthRouter from './routes/health';
+import usuarioRouter from './routes/usuario.routes';
 import vecinoRoutes from './routes/vecino.routes';
 import candidatoRouter from './routes/candidato.routes';
-import planchaRoutes from './routes/plancha.routes'; // <-- Importa las rutas de planchas
+import planchaRoutes from './routes/plancha.routes';
 import cargoRoutes from './routes/cargo.routes';
-import candidatoRoutes from './routes/candidato.routes';
 import resultadoRoutes from './routes/resultado.routes';
+
 import { errorHandler } from './middleware/error.middleware';
-// Cargar variables de entorno (SIEMPRE primero) 
-dotenv.config(); 
- 
-// Crear la aplicación Express con tipado TypeScript 
-const app: Application = express(); 
-const PORT: number = parseInt(process.env.PORT || "3000", 10); 
- 
-// ──────────────────────────────────────────────────── 
-// MIDDLEWARES GLOBALES 
-// Los middlewares se ejecutan en ORDEN para cada request 
-// ──────────────────────────────────────────────────── 
- 
-// Permitir requests desde otros dominios (necesario para el frontend) 
+
+// Crear aplicación
+const app: Application = express();
+const PORT: number = parseInt(process.env.PORT || '3000', 10);
+
+// ────────────────────────────────────────────────────
+// CORS
+// ────────────────────────────────────────────────────
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://padron-vecinal-front-gnt3syw0j-taskweb.vercel.app', // <--- Tu URL de Vercel añadida
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
 
-app.use(cors({ 
-  origin: allowedOrigins, 
-  credentials: true, 
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], 
-  allowedHeaders: ['Content-Type', 'Authorization'], 
-}));
- 
-// Parsear JSON del body de los requests 
-app.use(express.json()); 
- 
-// Parsear form data del body 
-app.use(express.urlencoded({ extended: true })); 
- 
-// ──────────────────────────────────────────────────── 
-// RUTAS 
-// ──────────────────────────────────────────────────── 
- 
-// Ruta de health check 
-app.use('/health', healthRouter); 
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Permitir peticiones sin Origin (Postman, Insomnia, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Permitir localhost y dominio definido en FRONTEND_URL
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Permitir todos los despliegues de Vercel del proyecto
+      if (
+        origin.startsWith('https://padron-vecinal-front-') &&
+        origin.endsWith('.vercel.app')
+      ) {
+        return callback(null, true);
+      }
+
+      console.log('❌ CORS bloqueó el origen:', origin);
+      callback(new Error('Origen no permitido por CORS'));
+    },
+
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
+// Parsear JSON
+app.use(express.json());
+
+// Parsear formularios
+app.use(express.urlencoded({ extended: true }));
+
+// ────────────────────────────────────────────────────
+// RUTAS
+// ────────────────────────────────────────────────────
+
+app.use('/health', healthRouter);
+
 app.use('/api/usuarios', usuarioRouter);
 app.use('/api/vecinos', vecinoRoutes);
 app.use('/api/candidatos', candidatoRouter);
-app.use('/api/planchas', planchaRoutes); // <-- Registra el endpoint base
+app.use('/api/planchas', planchaRoutes);
 app.use('/api/cargos', cargoRoutes);
-app.use('/api/candidatos', candidatoRoutes);
 app.use('/api/resultados', resultadoRoutes);
+
+// Middleware de errores
 app.use(errorHandler);
-// Ruta raíz informativa 
-app.get('/', (req: Request, res: Response) => { 
-  res.json({ 
-    project: 'Padron vecinal API', 
-    version: '1.0.0', 
-    clase: 1, 
-    description: 'Servidor Express con TypeScript + PostgreSQL', 
-    endpoints: { 
-      health: 'GET /health', 
-    }, 
-  }); 
-}); 
- 
-// ──────────────────────────────────────────────────── 
-// MANEJO DE RUTAS NO ENCONTRADAS (404) 
-// ──────────────────────────────────────────────────── 
-app.use((req: Request, res: Response) => { 
-  res.status(404).json({ 
-    error: 'Ruta no encontrada', 
-    path: req.path, 
-    method: req.method, 
-  }); 
-}); 
- 
-// ──────────────────────────────────────────────────── 
-// INICIAR EL SERVIDgit statusOR 
-// ──────────────────────────────────────────────────── 
-app.listen(PORT, () => { 
-  console.log('\n🚀 Padron Vecinal API iniciada'); 
-  console.log(`📡 Puerto: ${PORT}`); 
-  console.log(`🔍 Health: http://localhost:${PORT}/health`); 
-  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}\n`); 
-}); 
- 
-export default app; 
+
+// Ruta principal
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    project: 'Padron Vecinal API',
+    version: '1.0.0',
+    description: 'Servidor Express con TypeScript + PostgreSQL',
+    endpoints: {
+      health: 'GET /health',
+    },
+  });
+});
+
+// ────────────────────────────────────────────────────
+// 404
+// ────────────────────────────────────────────────────
+
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    error: 'Ruta no encontrada',
+    path: req.path,
+    method: req.method,
+  });
+});
+
+// ────────────────────────────────────────────────────
+// INICIAR SERVIDOR
+// ────────────────────────────────────────────────────
+
+app.listen(PORT, () => {
+  console.log('\n🚀 Padron Vecinal API iniciada');
+  console.log(`📡 Puerto: ${PORT}`);
+  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ Frontend permitido: ${process.env.FRONTEND_URL || 'Vercel Preview'}`);
+});
+
+export default app;
