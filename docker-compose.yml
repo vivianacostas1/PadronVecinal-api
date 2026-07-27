@@ -1,0 +1,57 @@
+services:
+
+  # ── PostgreSQL ────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: padron_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev
+      POSTGRES_DB: padron_vecinal
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+  # ── Backend ───────────────────────────────────────────
+  backend:
+    build:
+      context: ./PadronVecinal-api
+    container_name: padron_backend
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres_dev@db:5432/padron_vecinal
+      JWT_SECRET: mi_clave_secreta_super_segura_para_el_padron_vecinal_2026
+      JWT_EXPIRES_IN: 7d
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+      npx prisma db push --accept-data-loss &&
+      npx prisma db seed &&
+      node dist/index.js
+      "
+
+  # ── Frontend ──────────────────────────────────────────
+  frontend:
+    build:
+      context: ./PadronVecinal-front
+      args:
+        VITE_API_URL: http://localhost:3002
+    container_name: padron_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
