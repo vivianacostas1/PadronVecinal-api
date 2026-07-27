@@ -25,8 +25,15 @@ const PORT: number = parseInt(process.env.PORT || "3000", 10);
 // ──────────────────────────────────────────────────── 
  
 // Permitir requests desde otros dominios (necesario para el frontend) 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://padron-vecinal-front.vercel.app/login', // <--- Tu URL de Vercel añadida
+  process.env.FRONTEND_URL,
+].filter(Boolean) as string[];
+
 app.use(cors({ 
-  origin: ['http://localhost:5173', 'http://localhost:5174'], 
+  origin: allowedOrigins, 
   credentials: true, 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], 
   allowedHeaders: ['Content-Type', 'Authorization'], 
@@ -77,7 +84,7 @@ app.use((req: Request, res: Response) => {
 }); 
  
 // ──────────────────────────────────────────────────── 
-// INICIAR EL SERVIDOR 
+// INICIAR EL SERVIDgit statusOR 
 // ──────────────────────────────────────────────────── 
 app.listen(PORT, () => { 
   console.log('\n🚀 Padron Vecinal API iniciada'); 
